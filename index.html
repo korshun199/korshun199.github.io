@@ -1,1 +1,128 @@
-Hello
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>korshun199 · Engineer Tools</title>
+<style>
+:root{
+  --bg:#071014;--panel:#0d1b22;--panel2:#102630;
+  --text:#d8f3ff;--muted:#7fa4b3;--cyan:#00e5ff;
+  --green:#4dff9a;--orange:#ffb86b;--line:#1f3a45;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 20% 0%,#123744 0,#071014 35%),
+    linear-gradient(135deg,#071014,#05080a);
+  color:var(--text);
+}
+.wrap{max-width:1100px;margin:auto;padding:24px}
+.hero{
+  border:1px solid var(--line);border-radius:22px;padding:28px;
+  background:linear-gradient(145deg,rgba(13,27,34,.92),rgba(8,16,20,.92));
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+.badge{color:var(--green);font-family:monospace;font-size:14px}
+h1{font-size:clamp(34px,7vw,72px);margin:10px 0 8px;line-height:.95}
+h1 span{color:var(--cyan)}
+.lead{color:var(--muted);font-size:clamp(16px,3vw,22px);max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.card{
+  border:1px solid var(--line);border-radius:18px;padding:18px;
+  background:rgba(16,38,48,.78);
+}
+.card h3{margin:0 0 8px;color:var(--cyan)}
+.card p{margin:0;color:var(--muted)}
+.tools{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tool{
+  border:1px solid var(--line);border-radius:18px;padding:18px;background:#08151a;
+}
+input{
+  width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);
+  background:#03090c;color:var(--green);font:18px monospace;outline:none;
+}
+pre{
+  overflow:auto;margin:14px 0 0;padding:14px;border-radius:12px;
+  background:#03090c;color:var(--text);border:1px solid #12323d;
+}
+footer{color:var(--muted);text-align:center;margin:28px 0 8px}
+a{color:var(--green);text-decoration:none}
+@media(max-width:760px){
+  .wrap{padding:14px}
+  .hero{padding:20px}
+  .grid,.tools{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="badge">~/korshun199.github.io $ engineer-tools</div>
+    <h1>Engineer <span>Toolbox</span></h1>
+    <p class="lead">
+      Личная инженерная панель: Linux, ESP32, STM32, LoRa, радиосвязь,
+      прошивки, память, hex/dec и прочие железные радости без лишнего цирка.
+    </p>
+
+    <div class="grid">
+      <div class="card"><h3>Embedded</h3><p>ESP32 · STM32 · UART · Flash · Boot</p></div>
+      <div class="card"><h3>Radio</h3><p>LoRa · ExpressLRS · SX127x · частоты</p></div>
+      <div class="card"><h3>Linux</h3><p>CLI · scripts · diagnostics · recovery</p></div>
+    </div>
+
+    <div class="tools">
+      <div class="tool">
+        <h3>HEX ⇄ DEC ⇄ SIZE</h3>
+        <input id="num" placeholder="Например: 0x1000 или 4096" autofocus>
+        <pre id="out">Введи число...</pre>
+      </div>
+
+      <div class="tool">
+        <h3>Быстрые ссылки</h3>
+        <pre>GitHub:  <a href="https://github.com/korshun199">github.com/korshun199</a>
+Site:    korshun199.github.io
+Mode:    single-file / no-framework
+Status:  alive, surprisingly</pre>
+      </div>
+    </div>
+  </section>
+
+  <footer>korshun199 · engineering notes & tools</footer>
+</div>
+
+<script>
+function parseNum(s){
+  s=s.trim().replaceAll('_','').replaceAll(' ','');
+  if(!s)return null;
+  if(/^0x[0-9a-f]+$/i.test(s))return parseInt(s,16);
+  if(/^[0-9a-f]+h$/i.test(s))return parseInt(s.slice(0,-1),16);
+  if(/^0b[01]+$/i.test(s))return parseInt(s.slice(2),2);
+  if(/^[0-9]+$/.test(s))return parseInt(s,10);
+  return NaN;
+}
+function fmt(n){return new Intl.NumberFormat('ru-RU').format(n)}
+function update(){
+  const n=parseNum(num.value);
+  if(n===null){out.textContent='Введи число...';return}
+  if(Number.isNaN(n)){out.textContent='Не понял число. Примеры: 4096, 0x1000, 1000h';return}
+  out.textContent =
+`DEC:     ${fmt(n)}
+HEX:     0x${n.toString(16).toUpperCase()}
+BIN:     0b${n.toString(2)}
+
+Bytes:   ${fmt(n)} B
+KiB:     ${(n/1024).toFixed(4)}
+MiB:     ${(n/1024/1024).toFixed(6)}
+
+Range:
+start:   0x00000000
+end:     ${n>0?'0x'+(n-1).toString(16).toUpperCase():'-'}
+size:    0x${n.toString(16).toUpperCase()}`;
+}
+num.addEventListener('input',update);
+</script>
+</body>
+</html>
