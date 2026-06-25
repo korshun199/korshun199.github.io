@@ -3,32 +3,85 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Files · korshun199</title>
+<title>Файлы · korshun199</title>
 <style>
 body{margin:0;font-family:system-ui,Arial,sans-serif;background:#071014;color:#d8f3ff}
-main{max-width:850px;margin:auto;padding:22px}
+main{max-width:950px;margin:auto;padding:18px}
 h1{color:#00e5ff}
-a{color:#4dff9a;text-decoration:none}
-.card{border:1px solid #1f3a45;background:#0d1b22;border-radius:16px;padding:16px;margin:12px 0}
-small{color:#7fa4b3}
-code{color:#ffb86b}
+.card{border:1px solid #1f3a45;background:#0d1b22;border-radius:16px;padding:14px;margin:10px 0}
+.file{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center}
+.name{font-weight:700;word-break:break-all}
+.meta{color:#7fa4b3;font-size:14px}
+a.btn{background:#4dff9a;color:#061014;padding:9px 13px;border-radius:10px;text-decoration:none;font-weight:700}
+.err{color:#ffb86b}
+@media(max-width:700px){
+  .file{grid-template-columns:1fr}
+  a.btn{display:inline-block;width:max-content}
+}
 </style>
 </head>
 <body>
 <main>
 <h1>Файлы для скачивания</h1>
-<p><small>Сюда можно складывать файлы в каталог <code>files/</code> и отправлять людям прямые ссылки.</small></p>
-
-<div class="card">
-  <a href="files/" target="_blank">Открыть каталог files/</a><br>
-  <small>Если GitHub покажет список файлов, повезло. Если нет — добавляем ссылки ниже руками.</small>
-</div>
-
-<div class="card">
-  <b>Пример прямой ссылки:</b><br>
-  <code>https://korshun199.github.io/files/example.zip</code>
-</div>
-
+<div id="list">Загрузка...</div>
 </main>
+
+<script>
+const OWNER="korshun199";
+const REPO="korshun199.github.io";
+const DIR="files";
+
+function sizeFmt(bytes){
+  if(bytes < 1024) return bytes + " Б";
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + " КБ";
+  return (bytes/1024/1024).toFixed(2) + " МБ";
+}
+
+function dateFmt(s){
+  if(!s) return "—";
+  return new Date(s).toLocaleString("ru-RU");
+}
+
+async function lastDate(path){
+  const url=`https://api.github.com/repos/${OWNER}/${REPO}/commits?path=${encodeURIComponent(path)}&per_page=1`;
+  const r=await fetch(url);
+  if(!r.ok) return null;
+  const data=await r.json();
+  return data[0]?.commit?.committer?.date || null;
+}
+
+async function main(){
+  const box=document.getElementById("list");
+  const url=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${DIR}`;
+  const r=await fetch(url);
+
+  if(!r.ok){
+    box.innerHTML=`<p class="err">Не удалось прочитать каталог files/</p>`;
+    return;
+  }
+
+  let files=(await r.json()).filter(x=>x.type==="file" && x.name!==".keep");
+
+  if(files.length===0){
+    box.innerHTML=`<div class="card">Файлов пока нет. Сложи их в каталог <b>files/</b>.</div>`;
+    return;
+  }
+
+  files.sort((a,b)=>a.name.localeCompare(b.name));
+
+  box.innerHTML="";
+  for(const f of files){
+    const d=await lastDate(f.path);
+    box.innerHTML+=`
+      <div class="card file">
+        <div class="name">${f.name}</div>
+        <div class="meta">${sizeFmt(f.size)}</div>
+        <div class="meta">${dateFmt(d)}</div>
+        <a class="btn" href="${f.download_url}" download>Скачать</a>
+      </div>`;
+  }
+}
+main();
+</script>
 </body>
 </html>
